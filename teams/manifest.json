@@ -1,0 +1,48 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "quandatics-wfh-portal",
+  "packageName": "com.quandatics.wfh",
+  "developer": {
+    "name": "Quandatics",
+    "websiteUrl": "https://quandatics.com",
+    "privacyUrl": "https://quandatics.com/privacy",
+    "termsOfUseUrl": "https://quandatics.com/terms"
+  },
+  "name": {
+    "short": "WFH Portal",
+    "full": "Quandatics Work From Home Portal"
+  },
+  "description": {
+    "short": "Submit and manage WFH requests",
+    "full": "The Quandatics Work From Home Portal allows employees to submit recurring quarterly and ad hoc WFH requests, track approval status, and view their request history."
+  },
+  "icons": {
+    "color": "icon-color.png",
+    "outline": "icon-outline.png"
+  },
+  "accentColor": "#185FA5",
+  "staticTabs": [
+    {
+      "entityId": "wfh-portal",
+      "name": "WFH Portal",
+      "contentUrl": "https://YOUR_DEPLOYED_URL",
+      "websiteUrl": "https://YOUR_DEPLOYED_URL",
+      "scopes": ["personal"]
+    }
+  ],
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://YOUR_DEPLOYED_URL/teams-config",
+      "canUpdateConfiguration": false,
+      "scopes": ["team", "groupchat"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["YOUR_DEPLOYED_DOMAIN"],
+  "webApplicationInfo": {
+    "id": "YOUR_AZURE_CLIENT_ID",
+    "resource": "api://YOUR_DEPLOYED_DOMAIN/YOUR_AZURE_CLIENT_ID"
+  }
+}
