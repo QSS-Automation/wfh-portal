@@ -37,7 +37,7 @@ export function RequestDetail() {
   const isRec = request.requestType === 'Recurring'
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6">
       {/* Header */}
       <div className="flex items-start gap-3 mb-5">
         <Button variant="ghost" size="sm" onClick={() => navigate('/requests')}>← Back</Button>

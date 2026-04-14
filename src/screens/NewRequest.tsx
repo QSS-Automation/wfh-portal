@@ -167,8 +167,8 @@ export function NewRequest() {
 
       if (isRec) {
         fields.QuarterPeriod = q?.code
-        fields.StartDate = q?.startDate ? `${q.startDate}T00:00:00Z` : undefined
-        fields.EndDate = q?.endDate ? `${q.endDate}T00:00:00Z` : undefined
+        fields.StartDate = q?.startDate ? `${q.startDate}` : undefined
+        fields.EndDate = q?.endDate ? `${q.endDate}` : undefined
         fields.WFH_Days = recForm.selectedDays.join(';')
         fields.IsException = recForm.isException
         fields.LateSubmission = recForm.isException
@@ -186,6 +186,7 @@ export function NewRequest() {
         }
       } else {
         fields.StartDate = adForm.date ? `${adForm.date}T00:00:00Z` : undefined
+	fields.Reason = adForm.reason
         fields.LateSubmission = adForm.isLate
         if (adForm.justification?.trim()) {
           fields.Justification = adForm.justification
@@ -243,24 +244,20 @@ export function NewRequest() {
   )
 
   return (
-    <div style={{padding:'26px 30px', maxWidth:'680px'}}>
-      <div style={{fontSize:'20px',fontWeight:700,color:'#1a1a18',marginBottom:'4px',letterSpacing:'-0.3px'}}>New WFH Request</div>
-      <div style={{fontSize:'13px',color:'#73726c',marginBottom:'22px'}}>Submit a recurring or ad hoc work-from-home request</div>
+    <div className="p-6">
+      <PageHeader title="New WFH Request" subtitle="Submit a recurring or ad hoc work-from-home request" />
 
-      {/* Type Toggle — matches mockup .seg/.sb */}
-      <div style={{display:'flex',background:'#f5f4f0',borderRadius:'8px',padding:'3px',gap:'3px',width:'fit-content',marginBottom:'18px'}}>
+      {/* Type Toggle */}
+      <div className="flex bg-bg-page rounded-lg p-1 gap-1 w-fit mb-5">
         {(['Recurring', 'AdHoc'] as const).map(t => (
           <button
             key={t}
             onClick={() => setRequestType(t)}
-            style={{
-              padding:'8px 26px', fontSize:'13px', borderRadius:'6px', cursor:'pointer',
-              border: requestType === t ? '1px solid #e8e7e0' : 'none',
-              background: requestType === t ? '#fff' : 'none',
-              color: requestType === t ? '#185FA5' : '#73726c',
-              fontWeight: requestType === t ? 500 : 400,
-              fontFamily:'inherit', transition:'all 0.15s'
-            }}
+            className={`px-6 py-2 rounded-md text-sm transition-all font-medium
+              ${requestType === t
+                ? 'bg-white text-primary border border-border-default shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
+              }`}
           >
             {t === 'AdHoc' ? 'Ad hoc' : 'Recurring'}
           </button>
@@ -271,103 +268,91 @@ export function NewRequest() {
       {requestType === 'Recurring' && (
         <>
           {/* Quarter Selector */}
-          <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-            <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18',marginBottom:'4px'}}>Select quarter<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></div>
-            <div style={{fontSize:'12px',color:'#73726c',marginBottom:'12px'}}>Only current and next quarter are available. Fixed dates cannot be changed.</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px',marginBottom:'4px'}}>
-              {quarters.map(q => {
-                const isSelected = recForm.selectedQuarter?.tag === q.tag && !q.isAlreadySubmitted
-                return (
-                  <div
-                    key={q.code + q.tag}
-                    onClick={() => selectQuarter(q)}
-                    style={{
-                      border: isSelected ? '1.5px solid #185FA5' : '1.5px solid #d3d1c7',
-                      borderRadius:'10px', padding:'14px 16px',
-                      cursor: q.isAlreadySubmitted ? 'not-allowed' : 'pointer',
-                      background: isSelected ? '#EBF3FF' : q.isAlreadySubmitted ? '#f5f4f0' : '#fff',
-                      opacity: q.isAlreadySubmitted ? 0.5 : 1,
-                      boxShadow: isSelected ? '0 0 0 3px rgba(24,95,165,0.08)' : 'none',
-                      transition:'all 0.15s'
-                    }}
-                  >
-                    <div style={{fontSize:'12px',color:'#888780',fontWeight:500,marginBottom:'3px'}}>
-                      {q.tag === 'current' ? 'Current quarter' : 'Next quarter'}
-                    </div>
-                    <div style={{fontSize:'13px',fontWeight:600,color: isSelected ? '#185FA5' : '#1a1a18',marginBottom:'4px'}}>
-                      {q.label}
-                    </div>
-                    <div style={{fontSize:'12px',color:'#5f5e5a'}}>
-                      {formatDate(q.startDate)} – {formatDate(q.endDate)}
-                    </div>
-                    <div style={{fontSize:'11px',marginTop:'6px',fontWeight:500,
-                      color: q.isAlreadySubmitted ? '#888780' : q.isPastDeadline ? '#A32D2D' : '#1A6B3A'}}>
-                      {q.isAlreadySubmitted
-                        ? 'Already submitted — closed'
-                        : q.isPastDeadline
-                          ? `Deadline ${q.deadlineDate} passed — justification required`
-                          : `Apply by ${q.deadlineDate} ✓`
-                      }
-                    </div>
+          <Card className="mb-3">
+            <CardTitle>Select quarter <span className="text-danger">*</span></CardTitle>
+            <p className="text-xs text-text-secondary mb-3">Only current and next quarter available. Dates are fixed.</p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {quarters.map(q => (
+                <div
+                  key={q.code + q.tag}
+                  onClick={() => selectQuarter(q)}
+                  className={`border-2 rounded-xl p-3 transition-all
+                    ${q.isAlreadySubmitted
+                      ? 'opacity-50 cursor-not-allowed bg-bg-page'
+                      : 'cursor-pointer'
+                    }
+                    ${recForm.selectedQuarter?.tag === q.tag && !q.isAlreadySubmitted
+                      ? 'border-primary bg-primary-light'
+                      : 'border-border-default bg-white hover:border-primary'
+                    }`}
+                >
+                  <div className="text-[10px] text-text-muted font-medium mb-1">
+                    {q.tag === 'current' ? 'Current quarter' : 'Next quarter'}
                   </div>
-                )
-              })}
+                  <div className={`text-xs font-bold ${recForm.selectedQuarter?.tag === q.tag ? 'text-primary' : 'text-text-primary'}`}>
+                    {q.label}
+                  </div>
+                  <div className="text-xs text-text-secondary mt-1">
+                    {formatDate(q.startDate)} – {formatDate(q.endDate)}
+                  </div>
+                  <div className={`text-[10px] mt-1.5 font-medium
+                    ${q.isAlreadySubmitted ? 'text-text-muted' : q.isPastDeadline ? 'text-danger' : 'text-success'}`}>
+                    {q.isAlreadySubmitted
+                      ? 'Already submitted — closed'
+                      : q.isPastDeadline
+                        ? `Deadline ${q.deadlineDate} passed — justification required`
+                        : `Apply by ${q.deadlineDate} ✓`
+                    }
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          </Card>
 
           {/* Exception Block */}
           {recForm.isException && (
-            <div style={{background:'#fffbf0',border:'1px solid #FAC775',borderRadius:'10px',padding:'14px 16px',marginBottom:'12px'}}>
-              <div style={{fontSize:'12px',fontWeight:600,color:'#633806',marginBottom:'10px'}}>⚑ Late / exception submission — reason required</div>
-              <div style={{fontSize:'12px',color:'#5f5e5a',marginBottom:'10px',lineHeight:1.6}}>The normal deadline for this quarter has passed. Please select your reason:</div>
-              <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'10px'}}>
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-3">
+              <div className="text-xs font-semibold text-warning mb-2">⚑ Late / exception submission — reason required</div>
+              <p className="text-xs text-text-secondary mb-2">The normal deadline has passed. Please select your reason:</p>
+              <div className="flex gap-2 flex-wrap mb-2">
                 {(['New joiner', 'Missed deadline', 'Other'] as const).map(r => (
                   <button
                     key={r}
                     onClick={() => setRecForm(f => ({ ...f, exceptionReasonType: r }))}
-                    style={{
-                      padding:'6px 13px', borderRadius:'20px', fontSize:'12px', cursor:'pointer',
-                      border: recForm.exceptionReasonType === r ? '1px solid #BA7517' : '1px solid #d3d1c7',
-                      background: recForm.exceptionReasonType === r ? '#FAEEDA' : '#fff',
-                      color: recForm.exceptionReasonType === r ? '#633806' : '#5f5e5a',
-                      fontWeight: recForm.exceptionReasonType === r ? 500 : 400,
-                      fontFamily:'inherit', transition:'all 0.1s'
-                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-all
+                      ${recForm.exceptionReasonType === r
+                        ? 'bg-warning-light text-warning border-amber-400 font-medium'
+                        : 'bg-white text-text-secondary border-border-default hover:border-amber-300'
+                      }`}
                   >
-                    {r === 'New joiner' ? 'New joiner (mid-quarter)' : r === 'Other' ? 'Other reason' : r}
+                    {r}
                   </button>
                 ))}
               </div>
               {(recForm.exceptionReasonType === 'Missed deadline' || recForm.exceptionReasonType === 'Other') && (
-                <div>
-                  <label style={{fontSize:'12px',color:'#73726c',fontWeight:500,display:'block',marginBottom:'5px'}}>Details<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></label>
-                  <textarea
-                    rows={2}
-                    placeholder="Explain the reason for your late submission…"
-                    value={recForm.exceptionReasonDetail}
-                    onChange={e => setRecForm(f => ({ ...f, exceptionReasonDetail: e.target.value }))}
-                    style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit',resize:'vertical'}}
-                  />
-                </div>
+                <TextArea
+                  rows={2}
+                  placeholder="Explain the reason for late submission…"
+                  value={recForm.exceptionReasonDetail}
+                  onChange={e => setRecForm(f => ({ ...f, exceptionReasonDetail: e.target.value }))}
+                />
               )}
               {recForm.exceptionReasonType === 'New joiner' && (
-                <div style={{background:'#D6F0E0',borderRadius:'6px',padding:'8px 12px',fontSize:'12px',color:'#1A6B3A',marginTop:'8px'}}>
-                  New joiner exception noted — your join date will be referenced automatically.
-                </div>
+                <Alert variant="success">New joiner noted — your join date will be referenced automatically.</Alert>
               )}
             </div>
           )}
 
           {/* WFH Days */}
-          <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-            <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18',marginBottom:'10px'}}>WFH days<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></div>
+          <Card className="mb-3">
+            <CardTitle>WFH days <span className="text-danger">*</span></CardTitle>
             {appUser.employeeGroup === 'QAW' && (
-              <div style={{fontSize:'12px',color:'#A32D2D',marginBottom:'10px',fontWeight:500}}>QAW group: restricted to Tuesday and Thursday only.</div>
+              <p className="text-xs text-danger font-medium mb-2">QAW group: restricted to Tuesday and Thursday only.</p>
             )}
             {appUser.employeeGroup === 'General' && (
-              <div style={{fontSize:'12px',color:'#73726c',marginBottom:'10px'}}>Select up to 2 days per week.</div>
+              <p className="text-xs text-text-secondary mb-2">Select up to 2 days per week.</p>
             )}
-            <div style={{display:'flex',gap:'7px',flexWrap:'wrap'}}>
+            <div className="flex gap-2 flex-wrap">
               {ALL_DAYS.map(day => {
                 const isQAW = appUser.employeeGroup === 'QAW'
                 const isDisabled = isQAW && !['Tue', 'Thu'].includes(day)
@@ -377,38 +362,30 @@ export function NewRequest() {
                     key={day}
                     disabled={isDisabled}
                     onClick={() => toggleDay(day)}
-                    style={{
-                      padding:'7px 13px', borderRadius:'20px', fontSize:'12px', fontFamily:'inherit',
-                      border: isSelected && !isDisabled ? '1px solid #85B7EB' : '1px solid #d3d1c7',
-                      background: isSelected && !isDisabled ? '#E6F1FB' : '#fff',
-                      color: isSelected && !isDisabled ? '#0C447C' : '#5f5e5a',
-                      fontWeight: isSelected && !isDisabled ? 500 : 400,
-                      opacity: isDisabled ? 0.3 : 1,
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      transition:'all 0.1s', userSelect:'none'
-                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-all
+                      ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
+                      ${isSelected && !isDisabled
+                        ? 'bg-primary-light text-primary border-blue-300 font-medium'
+                        : 'bg-white text-text-secondary border-border-default hover:border-primary'
+                      }`}
                   >
                     {day}
                   </button>
                 )
               })}
             </div>
-          </div>
+          </Card>
 
           {/* Note */}
-          <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-            <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18',marginBottom:'12px'}}>Note to approver</div>
-            <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-              <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Note <span style={{fontWeight:400,color:'#b4b2a9',marginLeft:'4px'}}>optional</span></label>
-              <textarea
-                rows={2}
-                placeholder="Any additional context…"
-                value={recForm.managerNote}
-                onChange={e => setRecForm(f => ({ ...f, managerNote: e.target.value }))}
-                style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit',resize:'vertical'}}
-              />
-            </div>
-          </div>
+          <Card className="mb-3">
+            <CardTitle>Note to approver</CardTitle>
+            <TextArea
+              rows={2}
+              placeholder="Any additional context… (optional)"
+              value={recForm.managerNote}
+              onChange={e => setRecForm(f => ({ ...f, managerNote: e.target.value }))}
+            />
+          </Card>
 
           <ApprovalChain
             employeeGroup={appUser.employeeGroup}
@@ -423,93 +400,80 @@ export function NewRequest() {
       {requestType === 'AdHoc' && (
         <>
           {adHocLimitReached ? (
-            <div>
-              <div style={{background:'#fff',border:'1.5px solid #F09595',borderRadius:'12px',padding:'22px',textAlign:'center',marginBottom:'12px'}}>
-                <div style={{width:'44px',height:'44px',borderRadius:'50%',background:'#FCEBEB',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 10px',fontSize:'18px',color:'#A32D2D',fontWeight:700}}>✕</div>
-                <div style={{fontSize:'14px',fontWeight:600,color:'#A32D2D',marginBottom:'5px'}}>Ad hoc limit reached for this month</div>
-                <div style={{fontSize:'12px',color:'#73726c',lineHeight:1.6}}>
-                  You have already submitted {policy.adHocMaxPerMonth} ad hoc request for this month.<br/>
-                  Limit is {policy.adHocMaxPerMonth} per calendar month. You may submit again from next month.
-                </div>
-              </div>
+            <div className="border-2 border-red-300 rounded-xl p-5 text-center mb-3">
+              <div className="text-2xl mb-2">✕</div>
+              <div className="text-sm font-semibold text-danger mb-1">Ad hoc limit reached for this month</div>
+              <p className="text-xs text-text-secondary">
+                You have already used your {policy.adHocMaxPerMonth} ad hoc WFH day for this month.
+              </p>
             </div>
           ) : (
             <>
               {/* Date */}
-              <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
-                  <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18'}}>Request date</div>
-                  <div style={{fontSize:'11px',background:'#D6F0E0',color:'#1A6B3A',padding:'3px 10px',borderRadius:'20px',fontWeight:500}}>
+              <Card className="mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <CardTitle>Request date</CardTitle>
+                  <span className="text-[10px] bg-success-light text-success px-2 py-0.5 rounded-full font-medium">
                     {adHocUsedThisMonth} of {policy.adHocMaxPerMonth} used this month
-                  </div>
+                  </span>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
-                  <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                    <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Date<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span> <span style={{fontWeight:400,color:'#b4b2a9'}}>weekdays only · no overlap with recurring WFH</span></label>
-                    <input
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FormLabel required>Date <span className="text-text-muted font-normal">(weekdays only)</span></FormLabel>
+                    <Input
                       type="date"
                       value={adForm.date}
                       onChange={e => setAdForm(f => ({ ...f, date: e.target.value }))}
-                      style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit'}}
                     />
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                    <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Lead time status</label>
-                    <div style={{
-                      padding:'9px 12px', borderRadius:'8px', fontSize:'12px', lineHeight:1.5,
-                      background: adForm.date ? (adForm.isLate ? '#FFF0CC' : '#D6F0E0') : '#f5f4f0',
-                      color: adForm.date ? (adForm.isLate ? '#7A5500' : '#1A6B3A') : '#b4b2a9'
-                    }}>
+                  <div>
+                    <FormLabel>Lead time</FormLabel>
+                    <div className={`rounded-btn px-3 py-2 text-xs leading-relaxed
+                      ${adForm.date ? (adForm.isLate ? 'bg-warning-light text-warning' : 'bg-success-light text-success') : 'bg-bg-page text-text-muted'}`}>
                       {adForm.date
                         ? adForm.isLate
                           ? `${adForm.bizDaysAhead} biz day(s) — justification required`
-                          : `${adForm.bizDaysAhead} business days ahead — policy satisfied.`
+                          : `${adForm.bizDaysAhead} business days — policy satisfied ✓`
                         : 'Select a date above'
                       }
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
 
               {/* Late justification */}
               {adForm.isLate && (
-                <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-                  <div style={{fontSize:'13px',fontWeight:600,color:'#A32D2D',marginBottom:'10px'}}>Justification required — urgent submission</div>
-                  <div style={{background:'#FFF0CC',borderRadius:'8px',padding:'10px 14px',fontSize:'12px',color:'#7A5500',marginBottom:'10px',lineHeight:1.6}}>
-                    Date is less than {policy.adHocLeadDays} business days away.
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                    <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Justification<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></label>
-                    <textarea
+                <Card className="mb-3">
+                  <CardTitle>Justification required — urgent submission</CardTitle>
+                  <Alert variant="warning">Less than {policy.adHocLeadDays} business days ahead.</Alert>
+                  <div className="mt-2">
+                    <FormLabel required>Justification</FormLabel>
+                    <TextArea
                       rows={2}
                       placeholder="Explain the reason for short-notice submission…"
                       value={adForm.justification}
                       onChange={e => setAdForm(f => ({ ...f, justification: e.target.value }))}
-                      style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit',resize:'vertical'}}
                     />
                   </div>
-                </div>
+                </Card>
               )}
 
               {/* Projects (QAW only) */}
               {appUser.employeeGroup === 'QAW' && (
-                <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-                  <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18',marginBottom:'4px'}}>Project(s) involved<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></div>
-                  <div style={{fontSize:'12px',color:'#73726c',marginBottom:'10px'}}>
+                <Card className="mb-3">
+                  <CardTitle>Project(s) involved <span className="text-danger">*</span></CardTitle>
+                  <p className="text-xs text-text-secondary mb-2">
                     PM and Tech Lead from every selected project must approve before the CTO.
-                  </div>
-                  <div style={{position:'relative',marginBottom:'8px'}}>
-                    <span style={{position:'absolute',left:'10px',top:'50%',transform:'translateY(-50%)',color:'#b4b2a9',fontSize:'14px',pointerEvents:'none'}}>⌕</span>
-                    <input
-                      placeholder="Search projects…"
-                      value={projSearch}
-                      onChange={e => setProjSearch(e.target.value)}
-                      style={{padding:'9px 12px 9px 34px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit'}}
-                    />
-                  </div>
-                  <div style={{border:'1px solid #d3d1c7',borderRadius:'8px',overflow:'hidden',background:'#fff',maxHeight:'200px',overflowY:'auto',boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
+                  </p>
+                  <Input
+                    placeholder="🔍  Search projects…"
+                    value={projSearch}
+                    onChange={e => setProjSearch(e.target.value)}
+                    className="mb-2"
+                  />
+                  <div className="border border-border-default rounded-lg overflow-hidden max-h-44 overflow-y-auto">
                     {filteredProjects.length === 0 && (
-                      <div style={{fontSize:'12px',color:'#b4b2a9',padding:'10px 12px'}}>No projects found</div>
+                      <div className="text-xs text-text-muted p-3 text-center">No projects found</div>
                     )}
                     {filteredProjects.map(p => {
                       const selected = adForm.selectedProjects.some(x => x.projectCode === p.projectCode)
@@ -517,30 +481,27 @@ export function NewRequest() {
                         <div
                           key={p.projectCode}
                           onClick={() => toggleProject(p)}
-                          style={{display:'flex',alignItems:'flex-start',gap:'10px',padding:'10px 12px',cursor:'pointer',
-                            background: selected ? '#f0f6ff' : '#fff',
-                            borderBottom:'1px solid #f0efe8', transition:'background 0.1s'}}
+                          className={`flex items-start gap-2 p-2.5 cursor-pointer border-b border-border-light last:border-0 transition-colors
+                            ${selected ? 'bg-primary-light/50' : 'hover:bg-bg-surface'}`}
                         >
-                          <div style={{width:'16px',height:'16px',borderRadius:'4px',border: selected ? '1.5px solid #185FA5' : '1.5px solid #d3d1c7',
-                            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
-                            background: selected ? '#185FA5' : 'transparent',
-                            color:'#fff',fontSize:'10px',fontWeight:700,marginTop:'2px'}}>
+                          <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 mt-0.5 border-[1.5px] transition-all text-[9px] font-bold
+                            ${selected ? 'bg-primary border-primary text-white' : 'border-border-default'}`}>
                             {selected && '✓'}
                           </div>
                           <div>
-                            <div style={{fontSize:'13px',color:'#1a1a18',fontWeight:500}}>{p.projectCode} — {p.projectName}</div>
-                            <div style={{fontSize:'11px',color:'#73726c',marginTop:'2px'}}>PM: {p.projectManagerEmail.split('@')[0]} · TL: {p.techLeadEmail.split('@')[0]}</div>
+                            <div className="text-xs font-medium text-text-primary">{p.projectCode} — {p.projectName}</div>
+                            <div className="text-[10px] text-text-muted mt-0.5">PM: {p.projectManagerEmail.split('@')[0]} · TL: {p.techLeadEmail.split('@')[0]}</div>
                           </div>
                         </div>
                       )
                     })}
                   </div>
                   {adForm.selectedProjects.length > 0 && (
-                    <div style={{display:'flex',flexWrap:'wrap',gap:'6px',marginTop:'8px'}}>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                       {adForm.selectedProjects.map(p => (
-                        <span key={p.projectCode} style={{display:'flex',alignItems:'center',gap:'5px',background:'#E6F1FB',border:'1px solid #B5D4F4',borderRadius:'20px',padding:'4px 10px',fontSize:'12px',color:'#0C447C',fontWeight:500}}>
+                        <span key={p.projectCode} className="bg-primary-light border border-blue-200 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
                           {p.projectCode} — {p.projectName}
-                          <button onClick={(e) => { e.stopPropagation(); toggleProject(p) }} style={{cursor:'pointer',opacity:0.6,fontSize:'13px',lineHeight:1,background:'none',border:'none',color:'inherit',padding:0}}>×</button>
+                          <button onClick={() => toggleProject(p)} className="opacity-60 hover:opacity-100 text-xs">×</button>
                         </span>
                       ))}
                     </div>
@@ -550,38 +511,34 @@ export function NewRequest() {
                     requestType="AdHoc"
                     selectedProjects={adForm.selectedProjects}
                   />
-                </div>
+                </Card>
               )}
 
               {/* Reason + Note */}
-              <div style={{background:'#fff',border:'1px solid #e8e7e0',borderRadius:'12px',padding:'16px 20px',marginBottom:'12px',boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
-                <div style={{fontSize:'13px',fontWeight:600,color:'#1a1a18',marginBottom:'12px'}}>Request details</div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}}>
-                  <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                    <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Reason<span style={{color:'#A32D2D',marginLeft:'2px'}}>*</span></label>
-                    <input
+              <Card className="mb-3">
+                <CardTitle>Request details</CardTitle>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FormLabel required>Reason</FormLabel>
+                    <Input
                       placeholder="e.g. medical appointment, home delivery…"
                       value={adForm.reason}
                       onChange={e => setAdForm(f => ({ ...f, reason: e.target.value }))}
-                      style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit'}}
                     />
                   </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-                    <label style={{fontSize:'12px',color:'#73726c',fontWeight:500}}>Note to approver <span style={{fontWeight:400,color:'#b4b2a9',marginLeft:'4px'}}>optional</span></label>
-                    <input
+                  <div>
+                    <FormLabel>Note to approver <span className="text-text-muted font-normal">(optional)</span></FormLabel>
+                    <Input
                       placeholder="Any additional context…"
                       value={adForm.managerNote}
                       onChange={e => setAdForm(f => ({ ...f, managerNote: e.target.value }))}
-                      style={{padding:'9px 12px',borderRadius:'8px',border:'1px solid #d3d1c7',fontSize:'13px',background:'#fff',color:'#1a1a18',width:'100%',fontFamily:'inherit'}}
                     />
                   </div>
                 </div>
-              </div>
+              </Card>
 
               {appUser.employeeGroup === 'General' && (
-                <div style={{background:'#E6F1FB',borderRadius:'8px',padding:'10px 14px',fontSize:'12px',color:'#0C447C',marginBottom:'12px',lineHeight:1.6}}>
-                  Your line manager will be notified via Microsoft Teams Approvals.
-                </div>
+                <Alert variant="info">Your line manager will be notified via Microsoft Teams Approvals.</Alert>
               )}
             </>
           )}
@@ -589,40 +546,32 @@ export function NewRequest() {
       )}
 
       {/* Policy Reminder */}
-      <div style={{background:'#FCEBEB',borderRadius:'8px',padding:'10px 14px',fontSize:'12px',color:'#791F1F',marginBottom:'12px',lineHeight:1.6}}>
-        <strong>Policy reminder:</strong> If a physical meeting falls on your approved WFH day, office attendance is required regardless of approval status.
-      </div>
+      <Alert variant="error">
+        <strong>Policy reminder:</strong> If a physical meeting falls on your approved WFH day,
+        office attendance is required regardless of approval status.
+      </Alert>
 
       {/* Error */}
       {submitError && (
-        <div style={{background:'#FCEBEB',borderRadius:'8px',padding:'10px 14px',fontSize:'12px',color:'#791F1F',marginBottom:'12px',lineHeight:1.6}}>
-          <strong>Please fix:</strong> {submitError}
-        </div>
+        <Alert variant="error"><strong>Please fix:</strong> {submitError}</Alert>
       )}
 
       {/* Submit */}
       {!(requestType === 'AdHoc' && adHocLimitReached) && (
-        <div style={{display:'flex',gap:'10px',marginTop:'4px'}}>
-          <button
-            style={{background:'#185FA5',color:'#fff',border:'none',borderRadius:'8px',padding:'10px 22px',fontSize:'13px',fontWeight:600,cursor:'pointer',fontFamily:'inherit',letterSpacing:'0.1px'}}
-            onClick={() => {
-              if (!appUser || !policy) return
-              setSubmitError(null)
-              const v = requestType === 'Recurring'
-                ? validateRecurringForm(recForm, appUser.employeeGroup)
-                : validateAdHocForm(adForm, appUser.employeeGroup, policy.adHocLeadDays)
-              if (!v.valid) { setSubmitError(v.errors.join(' ')); return }
-              setStep('review')
-            }}
-          >
+        <div className="flex gap-3 mt-4">
+          <Button onClick={() => {
+            // Validate first, then show review
+            if (!appUser || !policy) return
+            setSubmitError(null)
+            const v = requestType === 'Recurring'
+              ? validateRecurringForm(recForm, appUser.employeeGroup)
+              : validateAdHocForm(adForm, appUser.employeeGroup, policy.adHocLeadDays)
+            if (!v.valid) { setSubmitError(v.errors.join(' ')); return }
+            setStep('review')
+          }}>
             Review &amp; Submit →
-          </button>
-          <button
-            style={{background:'#fff',color:'#5f5e5a',border:'1px solid #d3d1c7',borderRadius:'8px',padding:'9px 18px',fontSize:'13px',cursor:'pointer',fontFamily:'inherit'}}
-            onClick={() => navigate('/')}
-          >
-            Cancel
-          </button>
+          </Button>
+          <Button variant="ghost" onClick={() => navigate('/')}>Cancel</Button>
         </div>
       )}
     </div>
@@ -704,7 +653,7 @@ function SubmittedScreen({ requestType, recForm, adForm, submittedRef, onViewReq
   const now = new Date().toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-md">
       <div className="text-center py-6">
         <div className="w-14 h-14 rounded-full bg-success-light flex items-center justify-center mx-auto mb-4">
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
