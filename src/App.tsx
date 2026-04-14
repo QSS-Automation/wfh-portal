@@ -12,28 +12,11 @@ import { MyRequests } from './screens/MyRequests'
 const msalInstance = new PublicClientApplication(msalConfig)
 
 // ─── Login Page ────────────────────────────────────────────────────────────
-import { useEffect } from "react";
-
-export default function App() {
-
-  useEffect(() => {
-    console.log("ENV DEBUG:");
-    console.log("TENANT ID:", process.env.REACT_APP_AZURE_TENANT_ID);
-    console.log("CLIENT ID:", process.env.REACT_APP_AZURE_CLIENT_ID);
-    console.log("SITE URL:", process.env.REACT_APP_SHAREPOINT_SITE_URL);
-    console.log("SITE ID:", process.env.REACT_APP_SHAREPOINT_SITE_ID);
-    console.log("FLOW URL:", process.env.REACT_APP_FLOW_SUBMIT_URL);
-  }, []);
-
-  return (
-    <MsalProvider instance={msalInstance}>
-      <BrowserRouter>
-        <Root />
-      </BrowserRouter>
-    </MsalProvider>
-  )
-}
-
+console.log("ENV DEBUG:"); console.log("TENANT ID:", process.env.REACT_APP_AZURE_TENANT_ID)
+console.log("CLIENT ID:", process.env.REACT_APP_AZURE_CLIENT_ID)
+console.log("SITE URL:", process.env.REACT_APP_SHAREPOINT_SITE_URL)
+console.log("SITE ID:", process.env.REACT_APP_SHAREPOINT_SITE_ID)
+console.log("FLOW URL:", process.env.REACT_APP_FLOW_SUBMIT_URL)
 function LoginPage() {
   const { instance } = useMsal()
 
