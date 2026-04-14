@@ -22,6 +22,12 @@ jobs:
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
+        env:
+          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+          VITE_SHAREPOINT_SITE_URL: ${{ secrets.VITE_SHAREPOINT_SITE_URL }}
+          VITE_SHAREPOINT_SITE_ID: ${{ secrets.VITE_SHAREPOINT_SITE_ID }}
+          VITE_FLOW_SUBMIT_URL: ${{ secrets.VITE_FLOW_SUBMIT_URL }}
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_SEA_0BA7DFB1E }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
