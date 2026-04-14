@@ -643,7 +643,7 @@ function ReviewScreen({ appUser, requestType, recForm, adForm, onConfirm, onEdit
     : 'All PMs and Tech Leads notified in parallel. First rejection ends the request. CTO approves if all L1 approve.'
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6">
       <div className="text-xl font-bold text-text-primary mb-1 tracking-tight">Review your request</div>
       <div className="text-xs text-text-secondary mb-5">Check all details before submitting</div>
       <div className="bg-white border border-border-default rounded-card p-5 mb-4 shadow-sm">

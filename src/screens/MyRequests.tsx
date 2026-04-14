@@ -32,7 +32,7 @@ export function MyRequests() {
   }
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6">
       <PageHeader title="My Requests" subtitle="All your WFH submissions" />
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-2">
