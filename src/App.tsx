@@ -12,12 +12,12 @@ import { MyRequests } from './screens/MyRequests'
 const msalInstance = new PublicClientApplication(msalConfig)
 
 // ─── Login Page ────────────────────────────────────────────────────────────
-console.log("ENV DEBUG:")
-console.log("TENANT ID:", VITE_AZURE_TENANT_ID)
-console.log("CLIENT ID:", VITE_AZURE_CLIENT_ID)
-console.log("SITE URL:", VITE_SHAREPOINT_SITE_URL)
-console.log("SITE ID:", VITE_SHAREPOINT_SITE_ID)
-console.log("FLOW URL:", VITE_FLOW_SUBMIT_URL)
+console.log("ENV DEBUG:");
+console.log("TENANT ID:", import.meta.env.VITE_AZURE_TENANT_ID);
+console.log("CLIENT ID:", import.meta.env.VITE_AZURE_CLIENT_ID);
+console.log("SITE URL:", import.meta.env.VITE_SHAREPOINT_SITE_URL);
+console.log("SITE ID:", import.meta.env.VITE_SHAREPOINT_SITE_ID);
+console.log("FLOW URL:", import.meta.env.VITE_FLOW_SUBMIT_URL);
 function LoginPage() {
   const { instance } = useMsal()
 
