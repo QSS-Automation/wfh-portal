@@ -704,7 +704,7 @@ function SubmittedScreen({ requestType, recForm, adForm, submittedRef, onViewReq
   const now = new Date().toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
 
   return (
-    <div className="p-6 max-w-md">
+    <div className="p-6">
       <div className="text-center py-6">
         <div className="w-14 h-14 rounded-full bg-success-light flex items-center justify-center mx-auto mb-4">
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none">

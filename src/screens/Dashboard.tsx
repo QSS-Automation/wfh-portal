@@ -75,7 +75,7 @@ function MonthCal({ year, month, showPrev, showNext, onPrev, onNext, requests, e
       {/* Day cells */}
       <div className="grid grid-cols-5 gap-1">
         {cells.map((cell, i) => {
-          if (!cell.day) return <div key={i} className="rounded aspect-square" />
+          if (!cell.day) return <div key={i} className="rounded py-1" />
           const date = new Date(year, month - 1, cell.day)
           const type = getCalendarDayType(date, requests, employeeGroup, qawOfficeDays)
           const isToday = cell.day === today.getDate() && month - 1 === today.getMonth() && year === today.getFullYear()

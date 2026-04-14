@@ -1,5 +1,6 @@
 import { IPublicClientApplication } from '@azure/msal-browser'
 import { loginRequest, GRAPH_BASE, SP_SITE_ID, LIST_NAMES } from '../config/auth'
+import { format } from 'date-fns'
 import type {
   Employee, Project, PolicyRule, WFHRequest,
   Subsidiary, Department, EmployeeGroup,
@@ -173,10 +174,10 @@ function mapRequestItem(item: any): WFHRequest {
     employeeGroup: (f.EmployeeGroup ?? 'General') as EmployeeGroup,
     requestType: (f.RequestType ?? 'AdHoc') as RequestType,
     status: (f.Status ?? 'Pending') as RequestStatus,
-    wfhDays: f.WFH_Days ? (f.WFH_Days as string).split(';#').filter(Boolean) as WFHDay[] : undefined,
+    wfhDays: f.WFH_Days ? (f.WFH_Days as string).split(';').filter(Boolean) as WFHDay[] : undefined,
     quarterPeriod: (f.QuarterPeriod ?? undefined) as QuarterPeriod | undefined,
-    startDate: f.StartDate ?? undefined,
-    endDate: f.EndDate ?? undefined,
+    startDate: f.StartDate ? format(new Date(f.StartDate), 'yyyy-MM-dd') : undefined,
+    endDate: f.EndDate ? format(new Date(f.EndDate), 'yyyy-MM-dd') : undefined,
     submittedOn: f.SubmittedOn ?? '',
     lateSubmission: f.LateSubmission ?? false,
     justification: f.Justification ?? undefined,
@@ -221,6 +222,7 @@ export async function fetchMyRequests(
   const url = `${listUrl(LIST_NAMES.REQUESTS)}?expand=fields&$orderby=fields/Created desc&$top=500`
   const items = await fetchAllItems(msal, url)
 
+  console.log('abc:', items[0]?.fields)
   return items
     .filter(
       (item: any) =>
