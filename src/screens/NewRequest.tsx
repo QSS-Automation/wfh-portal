@@ -489,8 +489,8 @@ export function NewRequest() {
                             {selected && '✓'}
                           </div>
                           <div>
-                            <div className="text-xs font-medium text-text-primary">{p.projectCode} — {p.projectName}</div>
-                            <div className="text-[10px] text-text-muted mt-0.5">PM: {p.projectManagerEmail.split('@')[0]} · TL: {p.techLeadEmail.split('@')[0]}</div>
+                            <div className="text-xs font-medium text-text-primary">{p.projectName} ({p.projectCode})</div>
+                            <div className="text-[10px] text-text-muted mt-0.5">PM: {p.projectManagerName} · TL: {p.techLeadName}</div>
                           </div>
                         </div>
                       )
@@ -500,7 +500,7 @@ export function NewRequest() {
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {adForm.selectedProjects.map(p => (
                         <span key={p.projectCode} className="bg-primary-light border border-blue-200 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                          {p.projectCode} — {p.projectName}
+                          {p.projectName} ({p.projectCode})
                           <button onClick={() => toggleProject(p)} className="opacity-60 hover:opacity-100 text-xs">×</button>
                         </span>
                       ))}
