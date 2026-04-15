@@ -180,9 +180,9 @@ export function NewRequest() {
         }
         fields.ApproverEmail = appUser.employeeGroup === 'General'
           ? appUser.employee.managerEmail
-          : appUser.project?.ctoEmail
+          : appUser.employee.managerEmail
         if (appUser.employeeGroup === 'QAW') {
-          fields.CTOEmail = appUser.project?.ctoEmail
+          fields.ApproverEmail = appUser.employee.managerEmail
         }
       } else {
         fields.StartDate = adForm.date ? `${adForm.date}T00:00:00Z` : undefined
