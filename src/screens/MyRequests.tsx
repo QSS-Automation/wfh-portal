@@ -17,6 +17,7 @@ export function MyRequests() {
   const { myRequests, refreshRequests } = useApp()
   const [filter, setFilter] = useState<Filter>('All')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [confirmWithdrawId, setConfirmWithdrawId] = useState<string | null>(null)
 
   const filtered = useMemo(() => myRequests.filter(r => {
     if (filter === 'Active') return ACTIVE_STATUSES.includes(r.status)
@@ -25,11 +26,15 @@ export function MyRequests() {
   }), [myRequests, filter])
 
   async function handleWithdraw(r: WFHRequest) {
-    if (!window.confirm('Withdraw this request?')) return
+  try {
     await updateRequest(instance, r.id, { Status: 'Cancelled' })
     await refreshRequests()
     setExpandedId(null)
+    setConfirmWithdrawId(null)
+  } catch (e: any) {
+    alert('Withdraw failed: ' + e.message)
   }
+}
 
   return (
     <div className="p-6">
@@ -52,20 +57,23 @@ export function MyRequests() {
         {filtered.length === 0
           ? <EmptyState message={filter === 'Active' ? 'No active requests.' : filter === 'Past' ? 'No past requests.' : 'No requests yet.'} />
           : filtered.map(r => (
-            <RequestItem key={r.id} request={r}
-              isOpen={expandedId === r.id}
-              onToggle={() => setExpandedId(prev => prev === r.id ? null : r.id)}
-              onWithdraw={() => handleWithdraw(r)}
-              onResubmit={() => navigate('/new')} />
-          ))
+  	      <RequestItem key={r.id} request={r}
+    		isOpen={expandedId === r.id}
+    		onToggle={() => setExpandedId(prev => prev === r.id ? null : r.id)}
+    		onWithdraw={() => handleWithdraw(r)}
+    		onResubmit={() => navigate('/new')}
+    		confirmWithdraw={confirmWithdrawId === r.id}
+    		onRequestWithdraw={() => setConfirmWithdrawId(r.id)}
+    		onCancelWithdraw={() => setConfirmWithdrawId(null)} />
+	))
         }
       </div>
     </div>
   )
 }
 
-function RequestItem({ request: r, isOpen, onToggle, onWithdraw, onResubmit }:
-  { request: WFHRequest; isOpen: boolean; onToggle: () => void; onWithdraw: () => void; onResubmit: () => void }) {
+function RequestItem({ request: r, isOpen, onToggle, onWithdraw, onResubmit, confirmWithdraw, onRequestWithdraw, onCancelWithdraw }:
+  { request: WFHRequest; isOpen: boolean; onToggle: () => void; onWithdraw: () => void; onResubmit: () => void; confirmWithdraw: boolean; onRequestWithdraw: () => void; onCancelWithdraw: () => void }) {
   const isRec = r.requestType === 'Recurring'
   const title = isRec
     ? `Recurring · ${r.quarterPeriod?.replace(/-/g, ' ')} · ${formatWFHDays(r.wfhDays)}`
@@ -159,11 +167,25 @@ function RequestItem({ request: r, isOpen, onToggle, onWithdraw, onResubmit }:
 
           <div className="flex gap-2 mt-3 pt-3 border-t border-border-light">
             {r.status === 'Pending' && (
-              <button onClick={e => { e.stopPropagation(); onWithdraw() }}
-                className="bg-white text-danger border border-red-300 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-danger-light cursor-pointer">
-                Withdraw request
-              </button>
-            )}
+  			confirmWithdraw ? (
+    		<div className="flex items-center gap-2 bg-danger-light border border-red-200 rounded-lg px-3 py-2">
+     		<span className="text-xs text-danger font-medium">Confirm withdrawal?</span>
+     		<button onClick={e => { e.stopPropagation(); onWithdraw() }}
+        	  className="bg-danger text-white rounded-lg px-3 py-1 text-xs font-semibold hover:opacity-90 cursor-pointer">
+                  Yes, withdraw
+      		</button>
+      		<button onClick={e => { e.stopPropagation(); onCancelWithdraw() }}
+        	    className="bg-white text-text-secondary border border-border-default rounded-lg px-3 py-1 text-xs font-medium hover:bg-bg-page cursor-pointer">
+        	    Cancel
+        	</button>
+    	     </div>
+  	) : (
+    	  <button onClick={e => { e.stopPropagation(); onRequestWithdraw() }}
+             className="bg-white text-danger border border-red-300 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-danger-light cursor-pointer">
+             Withdraw request
+    	</button>
+  	)
+     )}
             {r.status === 'Rejected' && (
               <button onClick={e => { e.stopPropagation(); onResubmit() }}
                 className="bg-white text-text-secondary border border-border-default rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-bg-page cursor-pointer">
