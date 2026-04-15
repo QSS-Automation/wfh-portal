@@ -30,8 +30,11 @@ export interface Project {
   projectCode: string
   projectName: string
   projectManagerEmail: string
+  projectManagerName: string
   techLeadEmail: string
+  techLeadName: string
   ctoEmail: string
+  ctoName: string
   isActive: boolean
 }
 

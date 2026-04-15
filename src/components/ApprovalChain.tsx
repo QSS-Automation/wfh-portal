@@ -68,12 +68,12 @@ export function ApprovalChain({ employeeGroup, requestType, selectedProjects, ma
           <div className="flex flex-wrap gap-1 mt-1.5">
             {selectedProjects.map(p => (
               <span key={p.projectCode + '-pm'} className="bg-white border border-blue-200 rounded-full px-2 py-0.5 text-[10px] text-primary">
-                {p.projectManagerEmail.split('@')[0]} (PM·{p.projectCode})
+                {p.projectManagerName} (PM·{p.projectName})
               </span>
             ))}
             {selectedProjects.map(p => (
               <span key={p.projectCode + '-tl'} className="bg-white border border-blue-200 rounded-full px-2 py-0.5 text-[10px] text-primary">
-                {p.techLeadEmail.split('@')[0]} (TL·{p.projectCode})
+                {p.techLeadName} (TL·{p.projectName})
               </span>
             ))}
           </div>
@@ -94,7 +94,7 @@ export function ApprovalChain({ employeeGroup, requestType, selectedProjects, ma
           {selectedProjects[0]?.ctoEmail && (
             <div className="flex mt-1">
               <span className="bg-white border border-blue-200 rounded-full px-2 py-0.5 text-[10px] text-primary">
-                {selectedProjects[0].ctoEmail.split('@')[0]} (CTO)
+                {selectedProjects[0].ctoName} (CTO)
               </span>
             </div>
           )}

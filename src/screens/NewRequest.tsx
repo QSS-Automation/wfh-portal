@@ -490,7 +490,7 @@ export function NewRequest() {
                           </div>
                           <div>
                             <div className="text-xs font-medium text-text-primary">{p.projectName} ({p.projectCode})</div>
-                            <div className="text-[10px] text-text-muted mt-0.5">PM: {p.projectManagerEmail.split('@')[0]} · TL: {p.techLeadEmail.split('@')[0]}</div>
+                            <div className="text-[10px] text-text-muted mt-0.5">PM: {p.projectManagerName} · TL: {p.techLeadName}</div>
                           </div>
                         </div>
                       )
