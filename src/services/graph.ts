@@ -95,16 +95,16 @@ export async function fetchProjects(msal: IPublicClientApplication): Promise<Pro
   const items = await fetchAllItems(msal, url)
   return items
     .filter((item: any) => item.fields.IsActive !== false)
-    .map((item: any): Project => ({
+    ..map((item: any): Project => ({
       id: item.id,
       projectCode: item.fields.Title ?? '',
       projectName: item.fields.ProjectName ?? '',
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: item.fields.ProjectManager?.DisplayName ?? '',
+      projectManagerName: item.fields.ProjectManager?.LookupValue ?? item.fields.ProjectManagerEmail?.split('@')[0] ?? '',
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: item.fields.TechLead?.DisplayName ?? '',
+      techLeadName: item.fields.TechLead?.LookupValue ?? item.fields.TechLeadEmail?.split('@')[0] ?? '',
       ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName: item.fields.CTO?.DisplayName ?? '',
+      ctoName: item.fields.CTO?.LookupValue ?? item.fields.CTOEmail?.split('@')[0] ?? '',
       isActive: item.fields.IsActive ?? true,
     }))
 }
