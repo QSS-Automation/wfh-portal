@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MsalProvider, AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react'
-import { PublicClientApplication } from '@azure/msal-browser'
+import { PublicClientApplication, InteractionStatus } from '@azure/msal-browser'
 import { msalConfig, loginRequest } from './config/auth'
 import { AppProvider, useApp } from './contexts/AppContext'
 import { Sidebar } from './components/Sidebar'
@@ -93,17 +94,40 @@ function AppShell() {
 // ─── Root ──────────────────────────────────────────────────────────────────
 
 function Root() {
+  const { instance, accounts, inProgress } = useMsal()
+  const [ssoAttempted, setSsoAttempted] = useState(false)
+ 
+  useEffect(() => {
+    // Wait until MSAL is idle and no accounts are signed in
+    if (inProgress !== InteractionStatus.None || accounts.length > 0 || ssoAttempted) return
+    setSsoAttempted(true)
+ 
+    // Try silent SSO first using existing M365 browser session
+    instance.ssoSilent(loginRequest)
+      .catch(() => {
+        // Silent failed — redirect to Microsoft login (works in Teams iframe)
+        instance.loginRedirect(loginRequest).catch(console.error)
+      })
+  }, [instance, accounts, inProgress, ssoAttempted])
+ 
   return (
-    <>
-      <AuthenticatedTemplate>
-        <AppProvider>
-          <AppShell />
-        </AppProvider>
-      </AuthenticatedTemplate>
-      <UnauthenticatedTemplate>
-        <LoginPage />
-      </UnauthenticatedTemplate>
-    </>
+<>
+<AuthenticatedTemplate>
+<AppProvider>
+<AppShell />
+</AppProvider>
+</AuthenticatedTemplate>
+<UnauthenticatedTemplate>
+<div className="min-h-screen bg-bg-page flex items-center justify-center flex-col gap-3">
+<div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-2">
+<span className="text-white font-bold text-lg">Q</span>
+</div>
+<p className="text-sm font-semibold text-text-primary">Quandatics WFH Portal</p>
+<p className="text-xs text-text-muted">Signing in with your Microsoft 365 account…</p>
+<Spinner size="lg" />
+</div>
+</UnauthenticatedTemplate>
+</>
   )
 }
 
