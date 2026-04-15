@@ -158,7 +158,7 @@ function RequestItem({ request: r, isOpen, onToggle, onWithdraw, onResubmit }:
           )}
 
           <div className="flex gap-2 mt-3 pt-3 border-t border-border-light">
-            {r.status === 'Pending' && r.requestType === 'Recurring' && (
+            {r.status === 'Pending' && (
               <button onClick={e => { e.stopPropagation(); onWithdraw() }}
                 className="bg-white text-danger border border-red-300 rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-danger-light cursor-pointer">
                 Withdraw request
