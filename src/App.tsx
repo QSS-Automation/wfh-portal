@@ -92,18 +92,40 @@ function AppShell() {
 
 // ─── Root ──────────────────────────────────────────────────────────────────
 
+// ─── Login handler — SSO silent first, redirect fallback ──────────────────
 function Root() {
+  const { instance, accounts, inProgress } = useMsal()
+  const [ssoAttempted, setSsoAttempted] = React.useState(false)
+ 
+  React.useEffect(() => {
+    if (inProgress !== 'none' || ssoAttempted) return
+    setSsoAttempted(true)
+ 
+    // Try silent SSO first — works when user already has M365 session
+    instance.ssoSilent(loginRequest)
+      .catch(() => {
+        // Silent failed — use redirect (works in Teams iframe, unlike popup)
+        instance.loginRedirect(loginRequest).catch(console.error)
+      })
+  }, [instance, inProgress, ssoAttempted])
+ 
   return (
-    <>
-      <AuthenticatedTemplate>
-        <AppProvider>
-          <AppShell />
-        </AppProvider>
-      </AuthenticatedTemplate>
-      <UnauthenticatedTemplate>
-        <LoginPage />
-      </UnauthenticatedTemplate>
-    </>
+<>
+<AuthenticatedTemplate>
+<AppProvider>
+<AppShell />
+</AppProvider>
+</AuthenticatedTemplate>
+<UnauthenticatedTemplate>
+        {/* Show loading while SSO/redirect is in progress */}
+<div className="min-h-screen bg-bg-page flex items-center justify-center flex-col gap-3">
+<div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+<span className="text-white font-bold text-lg">Q</span>
+</div>
+<p className="text-xs text-text-muted">Signing in with your Microsoft 365 account…</p>
+</div>
+</UnauthenticatedTemplate>
+</>
   )
 }
 
