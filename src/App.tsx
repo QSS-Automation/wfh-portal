@@ -22,7 +22,7 @@ function LoginPage() {
   const { instance } = useMsal()
 
   function handleLogin() {
-    instance.loginPopup(loginRequest).catch(console.error)
+    instance.loginRedirect(loginRequest).catch(console.error)
   }
 
   return (
