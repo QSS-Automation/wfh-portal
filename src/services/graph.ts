@@ -95,7 +95,11 @@ export async function fetchProjects(msal: IPublicClientApplication): Promise<Pro
   const items = await fetchAllItems(msal, url)
   return items
     .filter((item: any) => item.fields.IsActive !== false)
+<<<<<<< HEAD
     ..map((item: any): Project => ({
+=======
+    .map((item: any): Project => ({
+>>>>>>> 161bcd2 (final 5.0)
       id: item.id,
       projectCode: item.fields.Title ?? '',
       projectName: item.fields.ProjectName ?? '',
