@@ -166,7 +166,7 @@ function RequestItem({ request: r, isOpen, onToggle, onWithdraw, onResubmit, con
           )}
 
           <div className="flex gap-2 mt-3 pt-3 border-t border-border-light">
-            {r.status === 'Pending' && (
+            {r.status === 'Pending' && r.status === 'Approved' && (
   			confirmWithdraw ? (
     		<div className="flex items-center gap-2 bg-danger-light border border-red-200 rounded-lg px-3 py-2">
      		<span className="text-xs text-danger font-medium">Confirm withdrawal?</span>
