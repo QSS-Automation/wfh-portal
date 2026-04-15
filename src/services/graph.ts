@@ -100,11 +100,11 @@ export async function fetchProjects(msal: IPublicClientApplication): Promise<Pro
       projectCode: item.fields.Title ?? '',
       projectName: item.fields.ProjectName ?? '',
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: item.fields.ProjectManager?.LookupValue ?? '',
+      projectManagerName: item.fields.ProjectManager?.DisplayName,
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: item.fields.TechLead?.LookupValue ?? '',
+      techLeadName: item.fields.TechLead?.DisplayName,
       ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName: item.fields.CTO?.LookupValue ?? '',
+      ctoName: item.fields.CTO?.DisplayName,
       isActive: item.fields.IsActive ?? true,
     }))
 }
