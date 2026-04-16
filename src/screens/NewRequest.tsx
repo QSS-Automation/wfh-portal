@@ -186,6 +186,7 @@ export function NewRequest() {
         }
       } else {
         fields.StartDate = adForm.date ? `${adForm.date}T00:00:00Z` : undefined
+	fields.WFH_Days = adForm.date ? new Date(adForm.date).toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 3): undefined
 	fields.Reason = adForm.reason
         fields.LateSubmission = adForm.isLate
         if (adForm.justification?.trim()) {
