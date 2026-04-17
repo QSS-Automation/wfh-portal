@@ -70,6 +70,23 @@ async function fetchAllItems(
   return all
 }
 
+async function getUserName(msal: IPublicClientApplication, email?: string) {
+  if (!email) return ''
+
+  const token = await msal.acquireTokenSilent({
+    scopes: ['User.Read']
+  })
+
+  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${email}`, {
+    headers: {
+      Authorization: `Bearer ${token.accessToken}`
+    }
+  })
+
+  const data = await res.json()
+  return data.displayName || ''
+}
+
 // ─── WFH_Policy ────────────────────────────────────────────────────────────
 
 export async function fetchPolicies(msal: IPublicClientApplication): Promise<PolicyRule[]> {
@@ -102,7 +119,7 @@ export async function fetchProjects(msal: IPublicClientApplication): Promise<Pro
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
       projectManagerName: item.fields.ProjectManager?.DisplayName ?? item.fields.ProjectManagerEmail?.split('@')[0] ?? '',
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: item.fields.TechLead?.DisplayName ?? item.fields.TechLeadEmail?.split('@')[0] ?? '',
+      techLeadName: await getUserName(msal, item.fields.TechLeadEmail),
       ctoEmail: item.fields.CTOEmail ?? '',
       ctoName: item.fields.CTO?.LookupValue ?? item.fields.CTOEmail?.split('@')[0] ?? '',
       isActive: item.fields.IsActive ?? true,
