@@ -85,7 +85,7 @@ async function getUserName(
   if (!email) return '';
 
   const token = await msal.acquireTokenSilent({
-    scopes: ['User.Read.All'],
+    scopes: ['User.Read'],
   });
 
   // safer query (works for all tenants)
