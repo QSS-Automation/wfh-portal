@@ -105,46 +105,46 @@ export async function fetchPolicies(msal: IPublicClientApplication): Promise<Pol
 
 // ─── WFH_Projects ──────────────────────────────────────────────────────────
 
-export async function fetchProjects(
-  msal: IPublicClientApplication
-): Promise<Project[]> {
-  const url = `${listUrl(LIST_NAMES.PROJECTS)}?expand=fields&$top=100`
+export async function fetchProjects(msal: IPublicClientApplication): Promise<Project[]> {
+  const url = `${listUrl(LIST_NAMES.PROJECTS)}?$expand=fields&$top=100`;
 
-  const items = await fetchAllItems(msal, url)
+  const items = await fetchAllItems(msal, url);
 
-  const projects = await Promise.all(
-    items
-      .filter((item: any) => item.fields.IsActive !== false)
-      .map(async (item: any): Promise<Project> => {
-        const [projectManagerName, techLeadName, ctoName] =
-          await Promise.all([
-            getUserName(msal, item.fields.ProjectManagerEmail),
-            getUserName(msal, item.fields.TechLeadEmail),
-            getUserName(msal, item.fields.CTOEmail),
-          ])
+  const getPersonName = (p: any, email?: string) =>
+    p?.DisplayName ??
+    p?.displayName ??
+    email?.split('@')[0] ??
+    '';
 
-        return {
-          id: item.id,
-          projectCode: item.fields.Title ?? '',
-          projectName: item.fields.ProjectName ?? '',
+  return items
+    .filter((item: any) => item.fields.IsActive !== false)
+    .map((item: any): Project => ({
+      id: item.id,
+      projectCode: item.fields.Title ?? '',
+      projectName: item.fields.ProjectName ?? '',
 
-          projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-          projectManagerName,
+      projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
+      projectManagerName: getPersonName(
+        item.fields.ProjectManager,
+        item.fields.ProjectManagerEmail
+      ),
 
-          techLeadEmail: item.fields.TechLeadEmail ?? '',
-          techLeadName,
+      techLeadEmail: item.fields.TechLeadEmail ?? '',
+      techLeadName: getPersonName(
+        item.fields.TechLead,
+        item.fields.TechLeadEmail
+      ),
 
-          ctoEmail: item.fields.CTOEmail ?? '',
-          ctoName,
+      ctoEmail: item.fields.CTOEmail ?? '',
+      ctoName:
+        item.fields.CTO?.LookupValue ??
+        item.fields.CTO?.DisplayName ??
+        item.fields.CTOEmail?.split('@')[0] ??
+        '',
 
-          isActive: item.fields.IsActive ?? true,
-        }
-      })
-  )
-
-  return projects
+      isActive: item.fields.IsActive ?? true,
+    }));
 }
-
 // ─── WFH_Employees ─────────────────────────────────────────────────────────
 //
 // WHY NO SERVER-SIDE FILTER:
