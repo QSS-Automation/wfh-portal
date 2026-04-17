@@ -70,22 +70,31 @@ async function fetchAllItems(
   return all
 }
 
-async function getUserName(msal: IPublicClientApplication, email?: string) {
-  if (!email) return ''
+async function getUserName(
+  msal: IPublicClientApplication,
+  email?: string
+): Promise<string> {
+  if (!email) return '';
 
   const token = await msal.acquireTokenSilent({
-    scopes: ['User.Read']
-  })
+    scopes: ['User.Read'],
+  });
 
-  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${email}`, {
-    headers: {
-      Authorization: `Bearer ${token.accessToken}`
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/users/${email}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token.accessToken}`,
+      },
     }
-  })
+  );
 
-  const data = await res.json()
-  return data.displayName || ''
+  if (!res.ok) return email.split('@')[0];
+
+  const data = await res.json();
+  return data.displayName || email.split('@')[0];
 }
+
 // ─── WFH_Policy ────────────────────────────────────────────────────────────
 
 export async function fetchPolicies(msal: IPublicClientApplication): Promise<PolicyRule[]> {
@@ -104,25 +113,43 @@ export async function fetchPolicies(msal: IPublicClientApplication): Promise<Pol
 
 // ─── WFH_Projects ──────────────────────────────────────────────────────────
 
-export async function fetchProjects(msal: IPublicClientApplication): Promise<Project[]> {
-  // IsActive is a Yes/No (boolean) column — safe to filter server-side as it
-  // is always indexed by SharePoint. Fetch all active projects.
-  const url = `${listUrl(LIST_NAMES.PROJECTS)}?expand=fields&$top=100`
-  const items = await fetchAllItems(msal, url)
-  return items
-    .filter((item: any) => item.fields.IsActive !== false)
-    .map((item: any): Project => ({
+export async function fetchProjects(
+  msal: IPublicClientApplication
+): Promise<Project[]> {
+  const url = `${listUrl(LIST_NAMES.PROJECTS)}?$expand=fields&$top=100`;
+
+  const items = await fetchAllItems(msal, url);
+
+  const getName = async (email?: string) => {
+    if (!email) return '';
+    return await getUserName(msal, email); // your Graph /users resolver
+  };
+
+  const filtered = items.filter(
+    (item: any) => item.fields.IsActive !== false
+  );
+
+  return await Promise.all(
+    filtered.map(async (item: any): Promise<Project> => ({
       id: item.id,
+
       projectCode: item.fields.Title ?? '',
       projectName: item.fields.ProjectName ?? '',
+
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: item.fields.ProjectManager?.DisplayName ?? item.fields.ProjectManagerEmail?.split('@')[0] ?? '',
+      projectManagerName: await getName(item.fields.ProjectManagerEmail),
+
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: item.fields.TechLead?.DisplayName ?? item.fields.TechLeadEmail?.split('@')[0] ?? '',
+      techLeadName: await getName(item.fields.TechLeadEmail),
+
       ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName: item.fields.CTO?.LookupValue ?? item.fields.CTOEmail?.split('@')[0] ?? '',
+      ctoName:
+        item.fields.CTO?.LookupValue ??
+        (await getName(item.fields.CTOEmail)),
+
       isActive: item.fields.IsActive ?? true,
     }))
+  );
 }
 
 // ─── WFH_Employees ─────────────────────────────────────────────────────────
