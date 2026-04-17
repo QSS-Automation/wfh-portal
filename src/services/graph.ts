@@ -105,37 +105,44 @@ export async function fetchPolicies(msal: IPublicClientApplication): Promise<Pol
 
 // ─── WFH_Projects ──────────────────────────────────────────────────────────
 
-export async function fetchProjects(msal: IPublicClientApplication): Promise<Project[]> {
-  // IsActive is a Yes/No (boolean) column — safe to filter server-side as it
-  // is always indexed by SharePoint. Fetch all active projects.
+export async function fetchProjects(
+  msal: IPublicClientApplication
+): Promise<Project[]> {
   const url = `${listUrl(LIST_NAMES.PROJECTS)}?expand=fields&$top=100`
+
   const items = await fetchAllItems(msal, url)
-  return items
-    .filter((item: any) => item.fields.IsActive !== false)
-    .map(async (item: any): Promise<Project> => {
-  const [projectManagerName, techLeadName, ctoName] = await Promise.all([
-    getUserName(msal, item.fields.ProjectManagerEmail),
-    getUserName(msal, item.fields.TechLeadEmail),
-    getUserName(msal, item.fields.CTOEmail),
-  ])
 
-  return {
-    id: item.id,
-    projectCode: item.fields.Title ?? '',
-    projectName: item.fields.ProjectName ?? '',
+  const projects = await Promise.all(
+    items
+      .filter((item: any) => item.fields.IsActive !== false)
+      .map(async (item: any): Promise<Project> => {
+        const [projectManagerName, techLeadName, ctoName] =
+          await Promise.all([
+            getUserName(msal, item.fields.ProjectManagerEmail),
+            getUserName(msal, item.fields.TechLeadEmail),
+            getUserName(msal, item.fields.CTOEmail),
+          ])
 
-    projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-    projectManagerName,
+        return {
+          id: item.id,
+          projectCode: item.fields.Title ?? '',
+          projectName: item.fields.ProjectName ?? '',
 
-    techLeadEmail: item.fields.TechLeadEmail ?? '',
-    techLeadName,
+          projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
+          projectManagerName,
 
-    ctoEmail: item.fields.CTOEmail ?? '',
-    ctoName,
+          techLeadEmail: item.fields.TechLeadEmail ?? '',
+          techLeadName,
 
-    isActive: item.fields.IsActive ?? true,
-  }
-})
+          ctoEmail: item.fields.CTOEmail ?? '',
+          ctoName,
+
+          isActive: item.fields.IsActive ?? true,
+        }
+      })
+  )
+
+  return projects
 }
 
 // ─── WFH_Employees ─────────────────────────────────────────────────────────
