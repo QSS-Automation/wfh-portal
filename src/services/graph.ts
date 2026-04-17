@@ -11,14 +11,22 @@ import type {
 // ─── Token Helper ──────────────────────────────────────────────────────────
 
 async function getToken(msalInstance: IPublicClientApplication): Promise<string> {
-  const accounts = msalInstance.getAllAccounts()
-  if (!accounts.length) throw new Error('No authenticated account found')
+  const account =
+    msalInstance.getActiveAccount() ||
+    msalInstance.getAllAccounts()[0];
+
+  if (!account) {
+    throw new Error('No authenticated account found');
+  }
+
   const result = await msalInstance.acquireTokenSilent({
     ...loginRequest,
-    account: accounts[0],
-  })
-  return result.accessToken
+    account,
+  });
+
+  return result.accessToken;
 }
+
 
 async function graphFetch(
   msalInstance: IPublicClientApplication,
