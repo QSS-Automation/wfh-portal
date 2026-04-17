@@ -106,7 +106,7 @@ export async function fetchPolicies(msal: IPublicClientApplication): Promise<Pol
 // ─── WFH_Projects ──────────────────────────────────────────────────────────
 
 export async function fetchProjects(msal: IPublicClientApplication): Promise<Project[]> {
-  const url = `${listUrl(LIST_NAMES.PROJECTS)}?$expand=fields&$top=100`;
+  const url = `${listUrl(LIST_NAMES.PROJECTS)}?$expand=fields($expand=ProjectManager,TechLead,CTO)&$top=100`;
 
   const items = await fetchAllItems(msal, url);
 
