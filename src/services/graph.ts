@@ -86,7 +86,6 @@ async function getUserName(msal: IPublicClientApplication, email?: string) {
   const data = await res.json()
   return data.displayName || ''
 }
-
 // ─── WFH_Policy ────────────────────────────────────────────────────────────
 
 export async function fetchPolicies(msal: IPublicClientApplication): Promise<PolicyRule[]> {
@@ -106,45 +105,26 @@ export async function fetchPolicies(msal: IPublicClientApplication): Promise<Pol
 // ─── WFH_Projects ──────────────────────────────────────────────────────────
 
 export async function fetchProjects(msal: IPublicClientApplication): Promise<Project[]> {
-  const url = `${listUrl(LIST_NAMES.PROJECTS)}?$expand=fields($expand=ProjectManager,TechLead,CTO)&$top=100`;
-
-  const items = await fetchAllItems(msal, url);
-
-  const getPersonName = (p: any, email?: string) =>
-    p?.DisplayName ??
-    p?.displayName ??
-    email?.split('@')[0] ??
-    '';
-
+  // IsActive is a Yes/No (boolean) column — safe to filter server-side as it
+  // is always indexed by SharePoint. Fetch all active projects.
+  const url = `${listUrl(LIST_NAMES.PROJECTS)}?expand=fields&$top=100`
+  const items = await fetchAllItems(msal, url)
   return items
     .filter((item: any) => item.fields.IsActive !== false)
     .map((item: any): Project => ({
       id: item.id,
       projectCode: item.fields.Title ?? '',
       projectName: item.fields.ProjectName ?? '',
-
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: getPersonName(
-        item.fields.ProjectManager,
-        item.fields.ProjectManagerEmail
-      ),
-
+      projectManagerName: item.fields.ProjectManager?.DisplayName ?? item.fields.ProjectManagerEmail?.split('@')[0] ?? '',
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: getPersonName(
-        item.fields.TechLead,
-        item.fields.TechLeadEmail
-      ),
-
+      techLeadName: item.fields.TechLead?.DisplayName ?? item.fields.TechLeadEmail?.split('@')[0] ?? '',
       ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName:
-        item.fields.CTO?.LookupValue ??
-        item.fields.CTO?.DisplayName ??
-        item.fields.CTOEmail?.split('@')[0] ??
-        '',
-
+      ctoName: item.fields.CTO?.LookupValue ?? item.fields.CTOEmail?.split('@')[0] ?? '',
       isActive: item.fields.IsActive ?? true,
-    }));
+    }))
 }
+
 // ─── WFH_Employees ─────────────────────────────────────────────────────────
 //
 // WHY NO SERVER-SIDE FILTER:

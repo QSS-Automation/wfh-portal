@@ -9,6 +9,7 @@ import { Spinner } from './components/UI'
 import { Dashboard } from './screens/Dashboard'
 import { NewRequest } from './screens/NewRequest'
 import { MyRequests } from './screens/MyRequests'
+import { Help } from './screens/Help'
 
 const msalInstance = new PublicClientApplication(msalConfig)
 
@@ -84,6 +85,7 @@ function AppShell() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/new" element={<NewRequest />} />
           <Route path="/requests" element={<MyRequests />} />
+  	  <Route path="/help" element={<Help />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
