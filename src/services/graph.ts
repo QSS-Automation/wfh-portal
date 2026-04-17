@@ -145,15 +145,15 @@ export async function fetchProjects(
       projectName: item.fields.ProjectName ?? '',
 
       projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: await getUserName(item.fields.ProjectManagerEmail),
+      projectManagerName: await getUserName(msal, item.fields.ProjectManagerEmail),
 
       techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: await getUserName(item.fields.TechLeadEmail),
+      techLeadName: await getUserName(msal, item.fields.TechLeadEmail),
 
       ctoEmail: item.fields.CTOEmail ?? '',
       ctoName:
         item.fields.CTO?.LookupValue ??
-        (await getUserName(item.fields.CTOEmail)),
+        (await getUserName(msal, item.fields.CTOEmail)),
 
       isActive: item.fields.IsActive ?? true,
     }))
