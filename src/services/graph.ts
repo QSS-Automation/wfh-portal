@@ -112,18 +112,30 @@ export async function fetchProjects(msal: IPublicClientApplication): Promise<Pro
   const items = await fetchAllItems(msal, url)
   return items
     .filter((item: any) => item.fields.IsActive !== false)
-    .map((item: any): Project => ({
-      id: item.id,
-      projectCode: item.fields.Title ?? '',
-      projectName: item.fields.ProjectName ?? '',
-      projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
-      projectManagerName: item.fields.ProjectManager?.DisplayName ?? item.fields.ProjectManagerEmail?.split('@')[0] ?? '',
-      techLeadEmail: item.fields.TechLeadEmail ?? '',
-      techLeadName: await getUserName(msal, item.fields.TechLeadEmail),
-      ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName: item.fields.CTO?.LookupValue ?? item.fields.CTOEmail?.split('@')[0] ?? '',
-      isActive: item.fields.IsActive ?? true,
-    }))
+    .map(async (item: any): Promise<Project> => {
+  const [projectManagerName, techLeadName, ctoName] = await Promise.all([
+    getUserName(msal, item.fields.ProjectManagerEmail),
+    getUserName(msal, item.fields.TechLeadEmail),
+    getUserName(msal, item.fields.CTOEmail),
+  ])
+
+  return {
+    id: item.id,
+    projectCode: item.fields.Title ?? '',
+    projectName: item.fields.ProjectName ?? '',
+
+    projectManagerEmail: item.fields.ProjectManagerEmail ?? '',
+    projectManagerName,
+
+    techLeadEmail: item.fields.TechLeadEmail ?? '',
+    techLeadName,
+
+    ctoEmail: item.fields.CTOEmail ?? '',
+    ctoName,
+
+    isActive: item.fields.IsActive ?? true,
+  }
+})
 }
 
 // ─── WFH_Employees ─────────────────────────────────────────────────────────
