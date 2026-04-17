@@ -85,11 +85,12 @@ async function getUserName(
   if (!email) return '';
 
   const token = await msal.acquireTokenSilent({
-    scopes: ['User.Read'],
+    scopes: ['User.Read.All'],
   });
 
+  // safer query (works for all tenants)
   const res = await fetch(
-    `https://graph.microsoft.com/v1.0/users/${email}`,
+    `https://graph.microsoft.com/v1.0/users?$filter=mail eq '${email}'`,
     {
       headers: {
         Authorization: `Bearer ${token.accessToken}`,
@@ -97,10 +98,11 @@ async function getUserName(
     }
   );
 
-  if (!res.ok) return email.split('@')[0];
-
   const data = await res.json();
-  return data.displayName || email.split('@')[0];
+
+  const user = data.value?.[0];
+
+  return user?.displayName || email.split('@')[0];
 }
 
 // ─── WFH_Policy ────────────────────────────────────────────────────────────
@@ -151,9 +153,7 @@ export async function fetchProjects(
       techLeadName: await getUserName(msal, item.fields.TechLeadEmail),
 
       ctoEmail: item.fields.CTOEmail ?? '',
-      ctoName:
-        item.fields.CTO?.LookupValue ??
-        (await getUserName(msal, item.fields.CTOEmail)),
+      ctoName:await getUserName(msal, item.fields.CTOEmail),
 
       isActive: item.fields.IsActive ?? true,
     }))
