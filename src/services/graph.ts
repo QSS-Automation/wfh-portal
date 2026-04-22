@@ -11,22 +11,42 @@ import type {
 // ─── Token Helper ──────────────────────────────────────────────────────────
 
 async function getToken(msalInstance: IPublicClientApplication): Promise<string> {
-  const account =
-    msalInstance.getActiveAccount() ||
-    msalInstance.getAllAccounts()[0];
+  const accounts = msalInstance.getAllAccounts();
 
-  if (!account) {
-    throw new Error('No authenticated account found');
+  // 🚨 No account → force login redirect
+  if (!accounts.length) {
+    await msalInstance.loginRedirect(loginRequest);
+    throw new Error("Redirecting for login");
   }
 
-  const result = await msalInstance.acquireTokenSilent({
-    ...loginRequest,
-    account,
-  });
+  try {
+    const result = await msalInstance.acquireTokenSilent({
+      ...loginRequest,
+      account: accounts[0],
+    });
 
-  return result.accessToken;
+    if (!result.accessToken) {
+      throw new Error("Empty access token");
+    }
+
+    return result.accessToken;
+  } catch (e: any) {
+    // 🔥 Critical: handle token expiration / interaction required
+    if (
+      e.name === "InteractionRequiredAuthError" ||
+      e.errorCode === "interaction_required" ||
+      e.errorCode === "login_required" ||
+      e.errorCode === "consent_required"
+    ) {
+      // ✅ Teams-safe fallback (NO popup)
+      await msalInstance.acquireTokenRedirect(loginRequest);
+      throw new Error("Redirecting for token");
+    }
+
+    // other unexpected errors
+    throw e;
+  }
 }
-
 
 async function graphFetch(
   msalInstance: IPublicClientApplication,
