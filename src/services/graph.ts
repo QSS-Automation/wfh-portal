@@ -10,14 +10,30 @@ import type {
 
 // ─── Token Helper ──────────────────────────────────────────────────────────
 
+// MSAL only allows one interactive request (popup/redirect) at a time.
+// Because several Graph calls can fire in parallel (see AppContext's
+// Promise.all), we cache the in-flight interactive promise so concurrent
+// callers await the SAME popup instead of each opening their own —
+// otherwise the 2nd+ call throws "interaction_in_progress".
+let interactionPromise: Promise<string> | null = null;
+
 async function getToken(msalInstance: IPublicClientApplication): Promise<string> {
   const accounts = msalInstance.getAllAccounts();
 
   // 🚨 No account → force login popup (redirect is blocked inside Teams' iframe)
   if (!accounts.length) {
-    const response = await msalInstance.loginPopup(loginRequest);
-    msalInstance.setActiveAccount(response.account);
-    return getToken(msalInstance);
+    if (!interactionPromise) {
+      interactionPromise = msalInstance
+        .loginPopup(loginRequest)
+        .then((response) => {
+          msalInstance.setActiveAccount(response.account);
+          return getToken(msalInstance);
+        })
+        .finally(() => {
+          interactionPromise = null;
+        });
+    }
+    return interactionPromise;
   }
 
   try {
@@ -39,12 +55,22 @@ async function getToken(msalInstance: IPublicClientApplication): Promise<string>
       e.errorCode === "login_required" ||
       e.errorCode === "consent_required"
     ) {
-      // ✅ Teams-safe fallback: popup works inside the Teams iframe, redirect does not
-      const result = await msalInstance.acquireTokenPopup(loginRequest);
-      if (!result.accessToken) {
-        throw new Error("Empty access token after popup");
+      // ✅ Teams-safe fallback: popup works inside the Teams iframe, redirect does not.
+      // Share one in-flight popup across concurrent callers (see comment above).
+      if (!interactionPromise) {
+        interactionPromise = msalInstance
+          .acquireTokenPopup(loginRequest)
+          .then((result) => {
+            if (!result.accessToken) {
+              throw new Error("Empty access token after popup");
+            }
+            return result.accessToken;
+          })
+          .finally(() => {
+            interactionPromise = null;
+          });
       }
-      return result.accessToken;
+      return interactionPromise;
     }
 
     // other unexpected errors
