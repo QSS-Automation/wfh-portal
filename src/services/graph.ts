@@ -13,10 +13,11 @@ import type {
 async function getToken(msalInstance: IPublicClientApplication): Promise<string> {
   const accounts = msalInstance.getAllAccounts();
 
-  // 🚨 No account → force login redirect
+  // 🚨 No account → force login popup (redirect is blocked inside Teams' iframe)
   if (!accounts.length) {
-    await msalInstance.loginRedirect(loginRequest);
-    throw new Error("Redirecting for login");
+    const response = await msalInstance.loginPopup(loginRequest);
+    msalInstance.setActiveAccount(response.account);
+    return getToken(msalInstance);
   }
 
   try {
@@ -38,9 +39,12 @@ async function getToken(msalInstance: IPublicClientApplication): Promise<string>
       e.errorCode === "login_required" ||
       e.errorCode === "consent_required"
     ) {
-      // ✅ Teams-safe fallback (NO popup)
-      await msalInstance.acquireTokenRedirect(loginRequest);
-      throw new Error("Redirecting for token");
+      // ✅ Teams-safe fallback: popup works inside the Teams iframe, redirect does not
+      const result = await msalInstance.acquireTokenPopup(loginRequest);
+      if (!result.accessToken) {
+        throw new Error("Empty access token after popup");
+      }
+      return result.accessToken;
     }
 
     // other unexpected errors
