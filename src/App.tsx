@@ -131,7 +131,9 @@ function Root() {
         instance.setActiveAccount(response.account);
       })
       .catch(() => {
-        instance.loginRedirect(loginRequest).catch(console.error);
+        instance.loginPopup(loginRequest)
+          .then((response) => instance.setActiveAccount(response.account))
+          .catch(console.error);
       });
   }, [instance, accounts, inProgress, ssoAttempted]);
 
